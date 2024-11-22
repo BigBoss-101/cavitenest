@@ -65,6 +65,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
         },
         body: JSON.stringify({
           reservationId: reservationDetails.id,
+          listingId: listingId,
           status: "confirmed",
         }),
       });
@@ -162,14 +163,16 @@ const MessageBox: React.FC<MessageBoxProps> = ({
               }}
             />
           )}
+          <div className="text-center">
           {isOwnerOfListing && (
             <button
               onClick={handleConfirmReservation} // Open the confirm reservation modal
-              className="ml-36 mb-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
             >
               Confirm Reservation
             </button>
           )}
+          </div>
         </div>
         {isLast && isOwn && seenList.length > 0 && (
           <div className="text-xs font-light text-gray-500">{`Seen by ${seenList}`}</div>

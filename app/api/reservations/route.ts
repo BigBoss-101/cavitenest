@@ -46,8 +46,8 @@ export async function POST(request: Request) {
               startDate: new Date(startDate),
               endDate: endDate ? new Date(endDate) : null, // Ensure endDate is null if not provided
               totalPrice,
-              status: status || "pending", // Default status to "pending" if not provided
-              listingOwner: currentUser.id,
+              status: status || "pending",
+              listingOwner: currentUser.id
             },
           },
           // Conditionally archive the listing only if rentalType is "rent"
@@ -116,7 +116,6 @@ export async function GET(request: Request) {
     );
   }
 }
-
 
 // import { NextResponse } from "next/server";
 

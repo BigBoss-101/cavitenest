@@ -61,10 +61,18 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
     if (reservation.endDate) {
       end = new Date(reservation.endDate);
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      // Check if the endDate is equal to 1/1/1970
+      if (end.getTime() === new Date("1970-01-01T00:00:00Z").getTime()) {
+        end = null; // Ignore end date if it's 1/1/1970
+      }
+
+      if (isNaN(start.getTime()) || (end && isNaN(end.getTime()))) {
         return "Invalid Date Range";
       }
-      return `${format(start, "PP")} - ${format(end, "PP")}`;
+
+      if (end) {
+        return `${format(start, "PP")} - ${format(end, "PP")}`;
+      }
     }
 
     if (isNaN(start.getTime())) {

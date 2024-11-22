@@ -249,12 +249,18 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
               subTitle="Help guests find you!"
             />
             <CountrySelect
-              onChange={(value) => setCustomValue("location", value)}
+              onChange={(value) => {
+                // Check if the selected value is different from the current location
+                if (value !== location) {
+                  setCustomValue("location", value); // Only update if there's a change
+                }
+              }}
               value={location}
             />
             <Map center={location?.latlng} />
           </div>
         );
+
       case STEPS.INFO:
         return (
           <div className="flex flex-col gap-8">

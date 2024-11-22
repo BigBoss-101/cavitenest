@@ -1,4 +1,5 @@
 "use client";
+
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -45,16 +46,35 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
       <Heading title="Reservations" subTitle="Bookings on your properties" />
       <div className="grid grid-cols-1 gap-8 mt-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {reservations.map((reservation) => (
-          <ListingCard
-            key={reservation.id}
-            data={reservation.listing}
-            reservation={reservation}
-            actionId={reservation.id}
-            onAction={onCancel}
-            disabled={deletingId === reservation.id}
-            actionLabel="Cancel reservation"
-            currentUser={currentUser}
-          />
+          <div key={reservation.id} className="p-2 rounded-lg">
+            <ListingCard
+              key={reservation.id}
+              data={reservation.listing}
+              reservation={reservation}
+              actionId={reservation.id}
+              onAction={onCancel}
+              disabled={deletingId === reservation.id}
+              actionLabel="Cancel reservation"
+              currentUser={currentUser}
+            />
+
+            <hr className="mt-4" />
+            {/* User Name and Reservation Status */}
+            <div className="mt-4">
+              {/* Assuming users is an array and the first element is the user who made the reservation */}
+              <p>
+                <strong>Lessee:</strong>{" "}
+                {reservation.users[0]?.name || "Unknown"}
+              </p>
+              <p>
+                <strong>Status:</strong>{" "}
+                {reservation?.status
+                  ? reservation.status.charAt(0).toUpperCase() +
+                    reservation.status.slice(1).toLowerCase()
+                  : "N/A"}
+              </p>
+            </div>
+          </div>
         ))}
       </div>
     </Container>

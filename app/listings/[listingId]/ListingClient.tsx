@@ -21,18 +21,28 @@ const initialDateRange = {
   key: "selection",
 };
 
+type Profile = {
+  id: string;
+  userId: string;
+  contactNo: string | null;
+  description: string | null;
+  interest: string[];
+};
+
 interface ListingClientProps {
   reservations?: SafeReservation[];
   listing: SafeListing & {
     user: SafeUser; // Host user information
   };
   currentUser?: SafeUser | null;
+  profile?: Profile | null;
 }
 
 const ListingClient: React.FC<ListingClientProps> = ({
   listing,
   reservations = [],
   currentUser,
+  profile,
 }) => {
   const loginModal = useLoginModal();
   const router = useRouter();
@@ -40,16 +50,23 @@ const ListingClient: React.FC<ListingClientProps> = ({
   const disabledDates = useMemo(() => {
     let dates: Date[] = [];
 
-    reservations.forEach((reservation) => {
-      const range = eachDayOfInterval({
-        start: new Date(reservation.startDate),
-        end: new Date(reservation.endDate),
+    reservations
+      .filter(
+        (reservation) =>
+          reservation.listingId === listing.id &&
+          reservation.status === "confirmed" // Only include reservations for this listing with "confirmed" status
+      )
+      .forEach((reservation) => {
+        const range = eachDayOfInterval({
+          start: new Date(reservation.startDate),
+          end: new Date(reservation.endDate),
+        });
+
+        dates = [...dates, ...range];
       });
 
-      dates = [...dates, ...range];
-    });
     return dates;
-  }, [reservations]);
+  }, [reservations, listing.id]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [totalPrice, setTotalPrice] = useState(listing.price);
@@ -123,6 +140,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
           <div className="grid grid-cols-1 mt-6 md:grid-cols-7 md:gap-10">
             <ListingInfo
               user={listing.user}
+              ownerContactNum={profile?.contactNo}
               bathroomCount={listing.bathroomCount}
               roomCount={listing.roomCount}
               guestCount={listing.guestCount}
@@ -155,6 +173,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 paymentMethod={listing.paymentMethod ?? ""}
                 listingId={listing.id}
                 listingOwner={listing.user.id}
+                listingImg={listing.imageSrc}
+                currentUser={currentUser?.id ?? null}
               />
             </div>
           </div>

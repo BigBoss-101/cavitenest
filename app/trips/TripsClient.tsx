@@ -73,18 +73,33 @@ const TripsClient: React.FC<TripsClientProps> = ({
       />
       <div className="grid grid-cols-1 gap-8 mt-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {userReservations.length > 0 ? (
-          userReservations.map((reservation) => (
-            <ListingCard
-              key={reservation.id}
-              data={reservation.listing} // Each reservation has a listing
-              reservation={reservation}
-              actionId={reservation.id}
-              onAction={onCancel}
-              disabled={deletingId === reservation.id}
-              actionLabel="Cancel reservation"
-              currentUser={currentUser}
-            />
-          ))
+          userReservations
+            .slice()
+            .reverse()
+            .map((reservation) => (
+              <div key={reservation.id}>
+                <ListingCard
+                  data={reservation.listing} // Each reservation has a listing
+                  reservation={reservation}
+                  actionId={reservation.id}
+                  onAction={onCancel}
+                  disabled={deletingId === reservation.id}
+                  actionLabel="Cancel reservation"
+                  currentUser={currentUser}
+                />
+                <hr className="mt-4" />
+                {/* User Name and Reservation Status */}
+                <div className="mt-4">
+                  <p>
+                    <strong>Status:</strong>{" "}
+                    {reservation?.status
+                      ? reservation.status.charAt(0).toUpperCase() +
+                        reservation.status.slice(1).toLowerCase()
+                      : "N/A"}
+                  </p>
+                </div>
+              </div>
+            ))
         ) : (
           <p>No reservations found.</p>
         )}

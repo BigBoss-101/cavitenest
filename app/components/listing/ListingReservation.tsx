@@ -8,6 +8,7 @@ import Button from "../Button";
 import Calendar from "../inputs/Calendar";
 import RentalAgreementModal from "../modals/RentalAgreementModal";
 import BookingAgreementModal from "../modals/BookingAgreementModal";
+import toast from "react-hot-toast";
 
 interface ListingReservationProps {
   price: number;
@@ -32,6 +33,8 @@ interface ListingReservationProps {
   paymentMethod: string;
   listingId: string;
   listingOwner: string;
+  listingImg: string;
+  currentUser: string | null;
 }
 
 const formatPrice = (price: number): string => {
@@ -63,6 +66,8 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
   conversationId,
   listingId,
   listingOwner,
+  listingImg,
+  currentUser,
 }) => {
   const initialType: "rent" | "booking" =
     rentalType === "both" ? "booking" : (rentalType as "rent" | "booking");
@@ -81,15 +86,56 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
     setCurrentType((prevType) => (prevType === "rent" ? "booking" : "rent"));
   };
 
-  const handleInquireClick = () => {
+  const handleInquireClick = async () => {
+    // Check if the user is logged in, if not open the login modal
     if (!isLoggedIn) {
       return loginModal.onOpen();
     }
 
-    if (currentType === "rent") {
-      setRentalModalOpen(true);
-    } else if (currentType === "booking") {
-      setBookingModalOpen(true);
+    // Early exit if user or listingId is missing
+    if (!currentUser || !listingId) {
+      toast.error("User ID or Listing ID is missing.");
+      console.error("Missing userId or listingId");
+      return;
+    }
+
+    console.log("Checking reservation for user:", currentUser);
+    console.log("Listing ID:", listingId);
+
+    try {
+      // Send the POST request to check for a pending reservation
+      const response = await axios.post("/api/reservations/checkReservation", {
+        userId: currentUser, // Current user ID
+        listingId: listingId, // Listing ID
+      });
+
+      console.log("Response from server:", response.data);
+
+      // Check if the server response indicates a pending reservation
+      if (
+        response.data &&
+        response.data.message ===
+          "You already have a reservation (pending or confirmed) for this property."
+      ) {
+        console.log("Pending reservation detected.");
+        toast.error(
+          "You already have an existing reservation for this property. Check your 'My Trips'."
+        );
+        return; // Do not proceed further
+      }
+
+      // If no pending reservation, open the appropriate modal based on the inquiry type
+      if (currentType === "rent") {
+        setRentalModalOpen(true); // Open the rental modal
+      } else if (currentType === "booking") {
+        setBookingModalOpen(true); // Open the booking modal
+      }
+    } catch (error) {
+      // Log error and display a toast error message
+      console.error("Error checking reservation:", error);
+      toast.error(
+        "An error occurred while checking for your reservation. Please try again."
+      );
     }
   };
 
@@ -130,6 +176,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
         checkInTime: modalData.checkInTime || "Not Specified",
         checkOutTime: modalData.checkOutTime || "Not Specified",
         paymentMethod: modalData.paymentMethod || "Not Specified",
+        listingImg: modalData.listingImg || "Not Specified",
       };
 
       // Send the sanitized modal data to the API to create a conversation or message
@@ -167,8 +214,20 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
       if (sanitizedModalData.rentalAmount !== "Not Specified") {
         // Rental Inquiry Message
         tailwindStyledMessage = `
+          Hi, I'm interested in this property
           <div class="px-12 py-4">
-          <h2 class="text-xl font-semibold text-blue-600">Rental Inquiry Details</h2>
+          <img 
+            src="${sanitizedModalData.listingImg}" 
+            alt="Listing Image" 
+            style="
+              height: 200px; 
+              width: auto;
+              object-fit: cover; 
+              vertical-align: middle;
+              margin-right: 8px;
+              border-radius: 4px;" 
+          />
+          <h2 class="mt-2 text-xl font-semibold text-blue-600">Rental Inquiry Details</h2>
           <p class="text-lg"><strong class="font-bold">Address:</strong> ${sanitizedModalData.rentalAddress}</p>
           <p class="text-lg"><strong class="font-bold">Total Amount:</strong> ₱${sanitizedModalData.rentalAmount}</p>
           <p class="text-lg"><strong class="font-bold">Security Deposit:</strong> ₱${sanitizedModalData.rentalSecurityDeposit}</p>
@@ -178,8 +237,20 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
       } else if (sanitizedModalData.bookingFee !== "Not Specified") {
         // Booking Inquiry Message
         tailwindStyledMessage = `
+          Hi, I'm interested in this property
           <div class="px-12 py-4">
-          <h2 class="text-xl font-semibold text-blue-600">Booking Inquiry Details</h2>
+          <img 
+            src="${sanitizedModalData.listingImg}" 
+            alt="Listing Image" 
+            style="
+              height: 200px; 
+              width: auto;
+              object-fit: cover; 
+              vertical-align: middle;
+              margin-right: 8px;
+              border-radius: 4px;"
+          />
+          <h2 class="mt-2 text-xl font-semibold text-blue-600">Booking Inquiry Details</h2>
           <p class="text-lg"><strong class="font-bold">Address:</strong> ${sanitizedModalData.bookingAddress}</p>
           <p class="text-lg"><strong class="font-bold">Amount:</strong> ₱${sanitizedModalData.bookingFee}</p>
           <p class="text-lg"><strong class="font-bold">Check-In:</strong> ${sanitizedModalData.checkInDate}</p>
@@ -221,7 +292,6 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
             <p className="text-neutral-600">
               Property Address: <strong>{rentalAddress}</strong>
             </p>
-
             <hr className="mt-4 mb-4" />
             <div className="mb-4">
               <label
@@ -243,8 +313,8 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
               />
             </div>
             <hr className="mt-4 mb-4" />
-            <p className="text-neutral-600">
-              Click the <strong>Inquire</strong> button below to see the full
+            <p className="text-neutral-600 text-justify">
+              Click the <strong>&quot;Inquire&quot;</strong> button below to see the full
               details of the property and the agreement set by the owner!
             </p>
             <br></br>
@@ -291,9 +361,10 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
                   />
                 </div>
               </div>
-              <p className="text-neutral-600">
-                Click the <strong>Reserve</strong> button below to see the full
-                details of the property and the agreement set by the owner!
+              <p className="text-neutral-600 text-justify">
+                Click the <strong>&quot;Reserve&quot;</strong> button below to
+                see the full details of the property and the agreement set by
+                the owner!
               </p>
               <br></br>
               <Button
@@ -342,32 +413,54 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
                 <p className="text-neutral-600">
                   Property Address: <strong>{rentalAddress}</strong>
                 </p>
-
                 <hr className="mt-4 mb-4" />
                 <div className="mb-4">
                   <label
                     htmlFor="startDate"
                     className="block text-neutral-700 font-medium mb-2"
                   >
-                    <strong>Ideal start date</strong>
+                    <strong>Ideal start date</strong> (defaults to date today)
                   </label>
-                  <input
-                    type="date"
-                    id="startDate"
-                    className="w-full p-2 border border-neutral-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-200"
-                    onChange={(e) =>
-                      onChangeDate({
-                        ...dateRange,
-                        startDate: new Date(e.target.value),
-                      })
-                    } // Replace with your event handler
-                  />
+                  <div className="relative">
+                    <input
+                      type="date"
+                      id="startDate"
+                      value={
+                        // Always display today's date by default if no date is selected
+                        dateRange.startDate
+                          ? dateRange.startDate.toISOString().split("T")[0] // Display the selected date
+                          : new Date().toISOString().split("T")[0] // Default to today's date
+                      }
+                      className="w-full p-2 border border-neutral-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-200 text-neutral-400"
+                      onChange={(e) =>
+                        onChangeDate({
+                          ...dateRange,
+                          startDate: new Date(e.target.value), // Update the state when user selects a date
+                        })
+                      }
+                      onFocus={(e) =>
+                        e.target.classList.remove("text-neutral-400")
+                      }
+                      onBlur={(e) => {
+                        if (!e.target.value) {
+                          e.target.classList.add("text-neutral-400");
+                        }
+                      }}
+                    />
+
+                    {/* Custom placeholder text */}
+                    {!dateRange.startDate && (
+                      <span className="absolute left-3 top-2 text-neutral-400">
+                        Select a date
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <hr className="mt-4 mb-4" />
-                <p className="text-neutral-600">
-                  Click the <strong>Inquire</strong> button below to see the
-                  full details of the property and the agreement set by the
-                  owner!
+                <p className="text-neutral-600 text-justify">
+                  Click the <strong>&quot;Inquire&quot;</strong> button below to
+                  see the full details of the property and the agreement set by
+                  the owner!
                 </p>
                 <br></br>
                 <Button
@@ -442,6 +535,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
             startDate: dateRange.startDate ?? null,
             rentalSecurityDeposit,
             utilitiesAndMaintenance,
+            listingImg,
           };
           handleAcceptAndInquire(rentalModalData);
         }}
@@ -470,6 +564,7 @@ const ListingReservation: React.FC<ListingReservationProps> = ({
             checkInTime,
             checkOutTime,
             paymentMethod,
+            listingImg,
           };
           handleAcceptAndInquire(bookingModalData);
         }}

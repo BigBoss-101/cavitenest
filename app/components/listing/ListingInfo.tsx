@@ -18,6 +18,7 @@ const Map = dynamic(() => import("../Map"), {
 
 interface ListingInfoProps {
   user: SafeUser | null;
+  ownerContactNum: string | null | undefined;
   category: Category | undefined;
   description: string;
   roomCount: number;
@@ -29,6 +30,7 @@ interface ListingInfoProps {
 
 const ListingInfo: React.FC<ListingInfoProps> = ({
   user,
+  ownerContactNum,
   category,
   description,
   roomCount,
@@ -62,7 +64,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
         {" "}
         {/* space-x-4 will add some space between elements */}
         {/* Profile Box */}
-        <div className="flex items-center p-5 border border-neutral-300 rounded-lg bg-white shadow-md w-72">
+        <div className="flex items-center p-5 border border-neutral-300 rounded-lg bg-white shadow-md w-68">
           <div className="flex flex-col items-center">
             <ProfileAvatar src={user?.image} key={user?.id} />
             <span className="text-neutral-700 mt-3 text-lg font-medium">
@@ -85,13 +87,13 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             <AiOutlineMail className="mr-2" /> {user?.email}
           </p>
           <p className="flex items-center text-sm text-neutral-500">
-            <AiOutlinePhone className="mr-2" /> 12345
+            <AiOutlinePhone className="mr-2" />{" "}
+            {ownerContactNum ? ownerContactNum : "N/A"}
           </p>
         </div>
       </div>
 
       <hr />
-
       {/* Listing Details */}
       <div className="grid grid-cols-2 font-light text-neutral-500 gap-4">
         <div className="flex items-center">
