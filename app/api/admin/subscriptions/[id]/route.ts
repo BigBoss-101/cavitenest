@@ -1,9 +1,12 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/app/libs/prismadb';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'GET') {
+// Handle GET requests to fetch subscriptions
+export async function GET(req: NextRequest) {
+  try {
     const subscriptions = await prisma.subscription.findMany();
-    res.json(subscriptions);
+    return NextResponse.json(subscriptions);
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch subscriptions' }, { status: 500 });
   }
 }
