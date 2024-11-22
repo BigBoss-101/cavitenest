@@ -6,58 +6,58 @@ import { SafeListing, SafeUser } from "@/app/types";
 import Container from "../components/Container";
 import ListingCard from "../properties/ListingCard";
 import Heading from "../properties/Heading";
-import Button from "../components/Button";
+import Button from "../components/Button"; // Import Button
 import BackButton from "../archived-properties/BackButton";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"; // Import useRouter for navigation
 
 interface ArchivedPropertiesPageProps {
   currentUser: SafeUser | null;
-  onUnarchiveSuccess?: (unarchivedListing: SafeListing) => void;
+  onUnarchiveSuccess?: (unarchivedListing: SafeListing) => void; // Callback to update the active listings
 }
 
 const ArchivedPropertiesPage: React.FC<ArchivedPropertiesPageProps> = ({
   currentUser,
-  onUnarchiveSuccess,
+  onUnarchiveSuccess, // Use the callback passed from parent
 }) => {
-  const router = useRouter();
+  const router = useRouter(); // Initialize the router
   const [archivedListings, setArchivedListings] = useState<SafeListing[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     // Fetch archived listings from the backend
-    const fetchArchivedListings = async () => {
-      try {
-        const response = await axios.get("/api/listings/archived");
+    axios
+      .get("/api/listings/archived")
+      .then((response) => {
         setArchivedListings(response.data);
-      } catch (error) {
+      })
+      .catch((error) => {
         console.error("Error fetching archived properties:", error);
-      } finally {
+      })
+      .finally(() => {
         setLoading(false);
-      }
-    };
-
-    fetchArchivedListings();
+      });
   }, []);
 
-  const onUnarchive = async (listingId: string) => {
-    try {
-      const response = await axios.patch(`/api/listings/${listingId}`, {
-        action: "unarchive",
+  // Unarchive a listing
+  const onUnarchive = (listingId: string) => {
+    axios
+      .patch(`/api/listings/${listingId}`, { action: "unarchive" })
+      .then((response) => {
+        const unarchivedListing = response.data; // Assuming response returns the unarchived listing
+
+        // Update the local state to reflect the unarchiving
+        setArchivedListings((prevListings) =>
+          prevListings.filter((listing) => listing.id !== listingId)
+        );
+
+        // Pass the unarchived listing to the parent (or wherever the active listings are)
+        if (onUnarchiveSuccess) {
+          onUnarchiveSuccess(unarchivedListing); // Update the active listings state
+        }
+      })
+      .catch((error) => {
+        console.error("Error unarchiving the property:", error);
       });
-      const unarchivedListing = response.data;
-
-      // Update the local state to reflect the unarchiving
-      setArchivedListings((prevListings) =>
-        prevListings.filter((listing) => listing.id !== listingId)
-      );
-
-      // Pass the unarchived listing to the parent if callback is provided
-      if (onUnarchiveSuccess) {
-        onUnarchiveSuccess(unarchivedListing);
-      }
-    } catch (error) {
-      console.error("Error unarchiving the property:", error);
-    }
   };
 
   return (
@@ -66,6 +66,7 @@ const ArchivedPropertiesPage: React.FC<ArchivedPropertiesPageProps> = ({
         title="Archived Properties"
         subTitle="View your archived properties"
       />
+      {/* Back Button */}
       <div className="relative">
         <BackButton
           label="Back to Properties"
@@ -86,7 +87,7 @@ const ArchivedPropertiesPage: React.FC<ArchivedPropertiesPageProps> = ({
               <ListingCard
                 data={listing}
                 currentUser={currentUser}
-                disabled={true} // Make it non-interactive
+                disabled={true} // Optional: You can make it non-interactive
               />
               <Button
                 label="Unarchive"
