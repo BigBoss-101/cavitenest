@@ -7,6 +7,7 @@ import SearchInput from '../../components/SearchInput';
 import ActionButton from '../../components/ActionButton';
 import Pagination from '../../components/Pagination';
 import LessorDetailsModal from '../../components/modals/LessorDetailsModal';
+import Image from 'next/image';
 
 interface Lessor {
   id: string;
@@ -105,7 +106,7 @@ const LessorList = () => {
       </div>
       <div className="bg-white rounded-lg shadow-md">
         <table className="min-w-full table-auto text-gray-700">
-        <thead className="bg-gray-100">
+          <thead className="bg-gray-100">
             <tr>
               <th className="px-4 py-2 border-b text-left">Image</th>
               <th className="px-4 py-2 border-b text-left">ID</th>
@@ -128,7 +129,14 @@ const LessorList = () => {
               paginatedLessors.map((lessor) => (
                 <tr key={lessor.id} className="hover:bg-gray-50">
                   <td className="px-4 py-2 border-b">
-                    <img src={lessor.image} alt={lessor.name} className="w-12 h-12 rounded-full" />
+                    <div className="relative w-12 h-12">
+                      <Image
+                        src={lessor.image}
+                        alt={lessor.name}
+                        fill
+                        className="rounded-full object-cover"
+                      />
+                    </div>
                   </td>
                   <td className="px-4 py-2 border-b">{lessor.id}</td>
                   <td className="px-4 py-2 border-b whitespace-nowrap">{lessor.name}</td>
@@ -138,25 +146,25 @@ const LessorList = () => {
                   </td>
                   <td className="px-4 py-2 border-b">{new Date(lessor.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-2 border-b whitespace-nowrap">
-                  {lessor.Subscription ? (
-                        <>
-                          <p>
-                            <strong>Plan:</strong> {lessor.Subscription.plan}
-                          </p>
-                          <p>
-                            <strong>Period:</strong> {lessor.Subscription.period}
-                          </p>
-                          <p>
-                            <strong>Status:</strong> {lessor.Subscription.subscriptionStatus}
-                          </p>
-                          <p>
-                            <strong>Start:</strong> {new Date(lessor.Subscription.startDate).toLocaleDateString()}
-                          </p>
-                          <p>
-                            <strong>End:</strong> {new Date(lessor.Subscription.endDate).toLocaleDateString()}
-                          </p>
-                        </>
-                      ) : (
+                    {lessor.Subscription ? (
+                      <>
+                        <p>
+                          <strong>Plan:</strong> {lessor.Subscription.plan}
+                        </p>
+                        <p>
+                          <strong>Period:</strong> {lessor.Subscription.period}
+                        </p>
+                        <p>
+                          <strong>Status:</strong> {lessor.Subscription.subscriptionStatus}
+                        </p>
+                        <p>
+                          <strong>Start:</strong> {new Date(lessor.Subscription.startDate).toLocaleDateString()}
+                        </p>
+                        <p>
+                          <strong>End:</strong> {new Date(lessor.Subscription.endDate).toLocaleDateString()}
+                        </p>
+                      </>
+                    ) : (
                       'No Subscription'
                     )}
                   </td>
@@ -166,25 +174,25 @@ const LessorList = () => {
                       actions={
                         showArchived
                           ? [
-                              {
-                                label: 'Unarchive',
-                                onClick: unarchiveLessor,
-                              },
-                            ]
+                            {
+                              label: 'Unarchive',
+                              onClick: unarchiveLessor,
+                            },
+                          ]
                           : [
-                              {
-                                label: 'View',
-                                onClick: () => openModal(lessor),
-                              },
-                              {
-                                label: 'Archive',
-                                onClick: archiveLessor,
-                              },
-                              {
-                                label: 'Block',
-                                onClick: (id) => alert(`Blocking lessor...`),
-                              },
-                            ]
+                            {
+                              label: 'View',
+                              onClick: () => openModal(lessor),
+                            },
+                            {
+                              label: 'Archive',
+                              onClick: archiveLessor,
+                            },
+                            {
+                              label: 'Block',
+                              onClick: (id) => alert(`Blocking lessor...`),
+                            },
+                          ]
                       }
                     />
                   </td>

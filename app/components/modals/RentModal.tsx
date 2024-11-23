@@ -160,7 +160,7 @@ const RentModal: React.FC<RentModalProps> = ({ user }) => {
 
         if (listingsCount !== undefined) {
           // Log current exisiting listings
-          //console.log("Listing Count:", listingsCount);
+          console.log("Listing Count:", listingsCount);
           setExistingListings(listingsCount); // Set the number of existing listings
         } else {
           console.error("Unexpected response format:", response.data);

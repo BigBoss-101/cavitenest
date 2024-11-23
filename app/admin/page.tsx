@@ -1,5 +1,3 @@
-// app/admin/page.tsx
-
 "use client";
 
 import { useEffect } from 'react';
@@ -7,35 +5,40 @@ import { useRouter } from 'next/navigation';
 import { useRole } from '../hooks/userRole';
 import AdminSidebar from './components/Submenu/AdminSidebar';
 import Loading from '../loading';
-
+import { useSession } from 'next-auth/react';
 
 const AdminPage = () => {
     const router = useRouter();
-    const { role, isAdmin, isLessor, isLessee } = useRole(); // Destructure the role property
+    const { role, isAdmin } = useRole(); // Destructure role-related properties
+    const { data: session, status } = useSession(); // Access the session data and status
 
     useEffect(() => {
-        // Your effect logic here
-        if (!isAdmin) {
-            // router.push('/admin/dashboard');
-            // Redirect or handle non-admin users
-            router.push('/'); // Example redirection
-        }else {
-            router.push('/admin/dashboard');
-            router.refresh
-        }
-    }, 
-    [isAdmin, router]);
+        if (status === 'loading') return; // Wait for session to load
 
-    if (!isAdmin) {
-    //     // Redirect or show an error if not an admin
-        return (
-            <Loading />
-        );
-      }
-    
+        if (!session?.user) {
+            // Redirect to login if no user session
+            router.push('/'); 
+            return;
+        }
+
+        if (!isAdmin) {
+            // Redirect non-admin users
+            router.push('/');
+        } else {
+            router.push('/admin/dashboard');
+        }
+    }, [isAdmin, router, session, status]);
+
+    // Show loading screen while session or role is being verified
+    if (status === 'loading' || !isAdmin) {
+        return <Loading />;
+    }
 
     return (
-        <Loading />
+        <div>
+            <AdminSidebar />
+            {/* Your Admin Page Content */}
+        </div>
     );
 };
 

@@ -1,43 +1,59 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/app/libs/prismadb"; // Adjust the path if necessary
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === "GET") {
-    const { listingId } = req.query;
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method === "PUT") {
+    const { reservationId, status } = req.body;
 
-    // Validate if listingId is present and is a string
-    if (!listingId || typeof listingId !== "string") {
-      return res.status(400).json({ error: "listingId is required and must be a string" });
+    if (!reservationId || status !== "confirmed") {
+      return res
+        .status(400)
+        .json({ error: "Invalid status or missing reservationId" });
     }
 
     try {
-      // Fetch the latest reservation details for the provided listingId
-      const latestReservation = await prisma.reservation.findFirst({
-        where: {
-          listingId: listingId, // Match reservations for this listingId
-        },
-        orderBy: {
-          createdAt: "desc", // Order by createdAt in descending order to get the latest reservation
-        },
-        include: {
-          listing: true, // Optionally include related Listing details
-          user: true, // Optionally include related User details
-        },
+      // Fetch the reservation details to get the end date and listing ID
+      const reservation = await prisma.reservation.findUnique({
+        where: { id: reservationId },
+        include: { listing: true }, // Include the related listing for the listingId
       });
 
-      // If no reservation found, return an empty object instead of an empty array
-      if (!latestReservation) {
-        return res.status(200).json({ message: "No reservations found for this listing." });
+      if (!reservation) {
+        return res.status(404).json({ error: "Reservation not found" });
       }
 
-      // Return the latest reservation data
-      return res.status(200).json(latestReservation);
+      // Log the listing ID before making any changes
+      console.log(`Reservation found. Listing ID: ${reservation.listing.id}`);
+
+      // Update the reservation status to 'confirmed'
+      const updatedReservation = await prisma.reservation.update({
+        where: { id: reservationId },
+        data: { status },
+      });
+
+      // Check if the end date is 1/1/1970 and archive the listing if necessary
+      const unixEpoch = new Date("1970-01-01").getTime();
+      if (
+        reservation.endDate &&
+        new Date(reservation.endDate).getTime() === unixEpoch &&
+        reservation.listing
+      ) {
+        // Archive the associated listing
+        await prisma.listing.update({
+          where: { id: reservation.listing.id },
+          data: { is_archived: true }, // Assuming 'archived' is a boolean field in the Listing model
+        });
+      }
+
+      return res.status(200).json(updatedReservation);
     } catch (error) {
-      console.error("Error fetching reservation:", error);
+      console.error("Error updating reservation status:", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   } else {
-    // Only allow GET method
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 }
